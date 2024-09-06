@@ -1,32 +1,52 @@
 from telegram import Update
-from telegram.ext import ApplicationBuilder, CallbackContext, MessageHandler, filters
+from telegram.ext import (ApplicationBuilder, CallbackContext, CommandHandler,
+                          MessageHandler, filters)
+
+
+async def start_handler(update: Update, context: CallbackContext) -> None:
+    await update.message.reply_text(
+        "Привет! Я простой Telegram-бот. Чтобы узнать, что я могу, напиши /help."
+    )
+
+
+async def help_handler(update: Update, context: CallbackContext) -> None:
+    response = (
+        "Доступные команды:\n"
+        "/start - запустить бота\n"
+        "/help - получить доступные команды\n"
+        "/id - получить свой ID\n"
+        "/username - получить свой ник"
+    )
+    await update.message.reply_text(response)
+
+
+async def id_handler(update: Update, context: CallbackContext) -> None:
+    response = f"Ваш ID: {update.effective_user.id}"
+    await update.message.reply_text(response)
+
+
+async def username_handler(update: Update, context: CallbackContext) -> None:
+    response = f"Ваш ник: {update.message.chat.username}"
+    await update.message.reply_text(response)
 
 
 async def message_handler(update: Update, context: CallbackContext) -> None:
-    first_name = update.effective_user.first_name
-    user_name = update.message.chat.username
-    user_id = update.effective_user.id
-    user_language = update.effective_user.language_code
-    current_date = update.message.date.isoformat()
+    await update.message.reply_text(f"Вы написали: {update.message.text}")
 
-    response_message = (
-        f"Имя: {first_name}\n"
-        f"Ник: {user_name}\n"
-        f"ID: {user_id}\n"
-        f"Язык: {user_language}\n"
-        f"Время: {current_date}"
-    )
-
-    await update.message.reply_text(response_message)
 
 def main():
-    TOKEN = 'TOKEN'
+    TOKEN = "TOKEN"
 
     app = ApplicationBuilder().token(TOKEN).build()
 
-    app.add_handler(MessageHandler(filters.TEXT, message_handler))
+    app.add_handler(CommandHandler("start", start_handler))
+    app.add_handler(CommandHandler("help", help_handler))
+    app.add_handler(CommandHandler("id", id_handler))
+    app.add_handler(CommandHandler("username", username_handler))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))
 
     app.run_polling()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
